@@ -27,7 +27,9 @@ type CompletionData = {
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.0.0";
+const STUDY_VERSION = "1.1.0";
+const DATA_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
 const FRAME_TEXT: Record<FrameCondition, string> = {
   gain:
@@ -60,16 +62,13 @@ function responseValue(
 }
 
 async function submitStudyData(payload: Record<string, unknown>) {
-  const response = await fetch("/api/responses", {
+  await fetch(DATA_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload),
     keepalive: true,
   });
-
-  if (!response.ok) {
-    throw new Error(`Response storage failed with status ${response.status}`);
-  }
 }
 
 function downloadFile(contents: string, filename: string, type: string) {
@@ -155,6 +154,10 @@ export default function Home() {
               backgroundTrial,
               "health_ai_familiarity",
             ),
+            sex_assigned_at_birth: responseValue(
+              backgroundTrial,
+              "sex_assigned_at_birth",
+            ),
             consent_rt_ms: trial("consent")?.rt ?? "",
             frame_rt_ms: frameTrial?.rt ?? "",
             trust_rt_ms: trustTrial?.rt ?? "",
@@ -238,7 +241,7 @@ export default function Home() {
               <div class="consent-grid">
                 <div><span>Time</span><strong>About 2 minutes</strong></div>
                 <div><span>Task</span><strong>Read one sentence and respond</strong></div>
-                <div><span>Privacy</span><strong>No identifying questions</strong></div>
+                <div><span>Privacy</span><strong>No names or contact details</strong></div>
               </div>
               <p class="fine-print">Participation is voluntary. You may stop at any time by closing this page. Your anonymous responses and response times will be stored for research. This prototype is not a clinical tool. Questions may be directed to <a href="mailto:amastobiza@ugr.es">amastobiza@ugr.es</a>.</p>
             </section>`,
@@ -360,7 +363,7 @@ export default function Home() {
           preamble: `
             <div class="survey-heading">
               <p class="trial-kicker">Your judgment · 4 of 4</p>
-              <h2>Two brief background questions</h2>
+              <h2>Three brief background questions</h2>
               <p>These help us compare perspectives across the CONFIIA community.</p>
             </div>`,
           questions: [
@@ -386,6 +389,18 @@ export default function Home() {
                 "Moderately familiar",
                 "Very familiar",
                 "Extremely familiar",
+                "Prefer not to answer",
+              ],
+              required: true,
+            },
+            {
+              prompt:
+                "What sex were you assigned at birth, on your original birth certificate?",
+              name: "sex_assigned_at_birth",
+              options: [
+                "Female",
+                "Male",
+                "Another sex or intersex",
                 "Prefer not to answer",
               ],
               required: true,
@@ -477,7 +492,7 @@ export default function Home() {
                 local copy below if you would like to keep it.
               </p>
             ) : (
-              <p className="submission-success">Response stored successfully.</p>
+              <p className="submission-success">Response submitted successfully.</p>
             )}
             <div className="download-actions">
               <button

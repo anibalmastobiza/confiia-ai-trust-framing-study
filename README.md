@@ -24,17 +24,36 @@ single sentence and communicate the same performance rate.
 3. **Reliance choice:** whether a clinician should give more weight to their
    own judgment, equal weight to both, or more weight to the AI.
 4. **Manipulation check:** recognition of the gain or loss sentence.
-5. **Background:** stakeholder perspective and familiarity with health AI.
+5. **Background:** stakeholder perspective, familiarity with health AI, and
+   sex assigned at birth (with a prefer-not-to-answer option).
 
 Response times, randomized option order, study version, and jsPsych version are
 also stored. The app requests no name, email, IP address, or free-text response.
 
 ## Data collection
 
-Completed summary rows are written to a private Cloudflare D1 table through a
-validated same-origin endpoint. The participant receives an anonymous code and
-can download the full local jsPsych session as CSV or JSON. The debrief explains
-the framing manipulation immediately after completion.
+Completed summary rows are sent to a Google Apps Script web app and appended to
+the private Google Sheet
+[CONFIIA — AI Trust Framing Study Responses](https://docs.google.com/spreadsheets/d/1zQQUAwmle48n9EpFc3W7czXHZ687-pss_ggglCbKtgM/edit).
+The collector validates the study identifier, prevents duplicate submissions,
+serializes concurrent writes, and neutralizes spreadsheet formulas. Its source
+is versioned in [`google-apps-script/Code.gs`](google-apps-script/Code.gs).
+
+The participant receives an anonymous code and can download the full local
+jsPsych session as CSV or JSON. The debrief explains the framing manipulation
+immediately after completion.
+
+## Development and publication
+
+```bash
+npm install
+npm run dev
+npm test
+```
+
+Every push to `main` builds the static Vite/jsPsych app and publishes it with
+GitHub Actions to
+`https://anibalmastobiza.github.io/confiia-ai-trust-framing-study/`.
 
 ## Research use
 

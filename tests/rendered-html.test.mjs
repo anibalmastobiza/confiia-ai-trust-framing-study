@@ -15,6 +15,8 @@ test("implements the complete CONFIIA jsPsych study", async () => {
   assert.match(page, /primary_trust/);
   assert.match(page, /trust_index/);
   assert.match(page, /frame_recall/);
+  assert.match(page, /sex_assigned_at_birth/);
+  assert.match(page, /Another sex or intersex/);
   assert.match(page, /About 2 minutes/);
   assert.doesNotMatch(page, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
 });
@@ -31,24 +33,20 @@ test("keeps the one-sentence frames logically equivalent", async () => {
   );
 });
 
-test("includes validated persistence, metadata, and a social card", async () => {
-  const [route, schema, layout, hosting, migration] = await Promise.all([
-    readFile(new URL("app/api/responses/route.ts", projectRoot), "utf8"),
-    readFile(new URL("db/schema.ts", projectRoot), "utf8"),
-    readFile(new URL("app/layout.tsx", projectRoot), "utf8"),
-    readFile(new URL(".openai/hosting.json", projectRoot), "utf8"),
-    readFile(
-      new URL("drizzle/0000_regular_young_avengers.sql", projectRoot),
-      "utf8",
-    ),
+test("includes Google Sheets persistence, GitHub Pages deployment, and a social card", async () => {
+  const [collector, html, workflow, viteConfig] = await Promise.all([
+    readFile(new URL("google-apps-script/Code.gs", projectRoot), "utf8"),
+    readFile(new URL("index.html", projectRoot), "utf8"),
+    readFile(new URL(".github/workflows/deploy-pages.yml", projectRoot), "utf8"),
+    readFile(new URL("vite.config.ts", projectRoot), "utf8"),
   ]);
 
-  assert.match(route, /export async function POST/);
-  assert.match(route, /parsePayload/);
-  assert.match(schema, /studyResponses/);
-  assert.match(hosting, /"d1": "DB"/);
-  assert.match(migration, /CREATE TABLE `study_responses`/);
-  assert.match(layout, /CONFIIA \/ Study 01/);
-  assert.match(layout, /\/og\.png/);
+  assert.match(collector, /function doPost/);
+  assert.match(collector, /LockService\.getScriptLock/);
+  assert.match(collector, /sex_assigned_at_birth/);
+  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(viteConfig, /confiia-ai-trust-framing-study/);
+  assert.match(html, /CONFIIA \/ Study 01/);
+  assert.match(html, /confiia-ai-trust-framing-study\/og\.png/);
   await access(new URL("public/og.png", projectRoot));
 });
