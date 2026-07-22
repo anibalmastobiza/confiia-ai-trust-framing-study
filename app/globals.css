@@ -604,6 +604,13 @@ input:focus-visible {
   line-height: 1;
 }
 
+.saving-card > p:not(.trial-kicker) {
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin: 24px auto 0;
+  max-width: 420px;
+}
+
 .error-card p {
   color: var(--ink-soft);
   margin: 24px 0;

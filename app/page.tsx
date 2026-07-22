@@ -62,13 +62,27 @@ function responseValue(
 }
 
 async function submitStudyData(payload: Record<string, unknown>) {
-  await fetch(DATA_ENDPOINT, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload),
-    keepalive: true,
-  });
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await fetch(DATA_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, 750));
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 function downloadFile(contents: string, filename: string, type: string) {
@@ -452,6 +466,7 @@ export default function Home() {
           <div className="pulse-mark" aria-hidden="true" />
           <p className="trial-kicker">One moment</p>
           <h1>Saving your anonymous response…</h1>
+          <p>Please keep this page open. This can take up to 15 seconds.</p>
         </section>
       </main>
     );
