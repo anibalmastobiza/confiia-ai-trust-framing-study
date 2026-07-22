@@ -23,6 +23,8 @@
 
 html {
   background: var(--paper);
+  min-width: 320px;
+  overflow-x: hidden;
 }
 
 body {
@@ -35,11 +37,19 @@ body {
   font-family: var(--font-sans);
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+button,
+label {
+  touch-action: manipulation;
 }
 
 button:focus-visible,
@@ -51,6 +61,7 @@ input:focus-visible {
 
 .study-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
 }
 
@@ -353,23 +364,37 @@ input:focus-visible {
 /* Running experiment */
 .running-shell {
   background: rgba(255, 253, 248, 0.75);
+  padding-top: 71px;
 }
 
 .compact-header {
+  background: var(--paper);
   border-bottom: 1px solid var(--line);
   max-width: none;
   padding-bottom: 18px;
   padding-top: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 101;
+}
+
+.running-shell .compact-header {
+  left: 0;
+  position: fixed;
+  right: 0;
 }
 
 .experiment-mount {
   min-height: calc(100vh - 72px);
+  min-height: calc(100dvh - 72px);
   padding: 64px 24px 82px;
+  width: 100%;
 }
 
 #jspsych-content {
   margin: 0 auto;
   max-width: 940px;
+  overflow-wrap: anywhere;
   width: 100%;
 }
 
@@ -386,7 +411,7 @@ input:focus-visible {
   text-transform: uppercase;
   top: 70px;
   width: 100%;
-  z-index: 10;
+  z-index: 100;
 }
 
 #jspsych-progressbar-outer {
@@ -433,8 +458,7 @@ input:focus-visible {
   line-height: 1.68;
 }
 
-.trial-card + .jspsych-btn,
-.trial-card ~ .jspsych-btn {
+#jspsych-html-button-response-btngroup {
   margin-top: 26px;
 }
 
@@ -559,8 +583,8 @@ input:focus-visible {
   margin-right: 9px;
 }
 
-.choice-card ~ .jspsych-html-button-response-btngroup,
-.recall-card ~ .jspsych-html-button-response-btngroup {
+#jspsych-html-button-response-stimulus:has(.choice-card) + #jspsych-html-button-response-btngroup,
+#jspsych-html-button-response-stimulus:has(.recall-card) + #jspsych-html-button-response-btngroup {
   align-items: stretch;
   display: grid;
   gap: 12px;
@@ -568,8 +592,8 @@ input:focus-visible {
   margin-top: 20px;
 }
 
-.choice-card ~ .jspsych-html-button-response-btngroup .jspsych-btn,
-.recall-card ~ .jspsych-html-button-response-btngroup .jspsych-btn {
+#jspsych-html-button-response-stimulus:has(.choice-card) + #jspsych-html-button-response-btngroup .jspsych-btn,
+#jspsych-html-button-response-stimulus:has(.recall-card) + #jspsych-html-button-response-btngroup .jspsych-btn {
   background: var(--paper-light);
   color: var(--navy);
   justify-content: flex-start;
@@ -578,8 +602,8 @@ input:focus-visible {
   width: 100%;
 }
 
-.choice-card ~ .jspsych-html-button-response-btngroup .jspsych-btn:hover,
-.recall-card ~ .jspsych-html-button-response-btngroup .jspsych-btn:hover {
+#jspsych-html-button-response-stimulus:has(.choice-card) + #jspsych-html-button-response-btngroup .jspsych-btn:hover,
+#jspsych-html-button-response-stimulus:has(.recall-card) + #jspsych-html-button-response-btngroup .jspsych-btn:hover {
   background: var(--navy);
   color: var(--paper-light);
 }
@@ -751,10 +775,15 @@ input:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .study-header {
+    padding-bottom: 16px;
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+
   .study-header,
   .study-footer {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
 
   .pilot-status,
@@ -762,74 +791,249 @@ input:focus-visible {
     display: none;
   }
 
+  .wordmark {
+    font-size: 0.68rem;
+    gap: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .mark {
+    height: 32px;
+    width: 32px;
+  }
+
   .hero-grid,
   .completion-grid {
-    padding: 0 20px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
 
   .hero-copy {
-    min-height: 530px;
-    padding: 58px 6px 62px 26px;
+    min-height: auto;
+    padding: 46px 8px 48px 24px;
   }
 
   .hero-copy h1 {
-    font-size: clamp(3.2rem, 16vw, 5.2rem);
+    font-size: clamp(3rem, 15.5vw, 4.4rem);
+    line-height: 0.94;
+  }
+
+  .hero-summary {
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 26px 0 24px;
+  }
+
+  .begin-button {
+    max-width: none;
+    width: 100%;
   }
 
   .study-overview {
-    padding: 38px 28px;
+    min-height: auto;
+    padding: 34px 24px;
+  }
+
+  .study-overview ol {
+    margin-top: 48px;
+  }
+
+  .study-overview li {
+    padding: 18px 0;
+  }
+
+  .overview-meta {
+    margin-top: 24px;
   }
 
   .study-footer {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    padding-top: 22px;
+  }
+
+  .compact-header {
+    padding-bottom: 12px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .running-shell {
+    padding-top: calc(57px + env(safe-area-inset-top));
   }
 
   .experiment-mount {
-    padding: 58px 14px 64px;
+    min-height: calc(100dvh - 57px - env(safe-area-inset-top));
+    padding: 58px max(12px, env(safe-area-inset-right)) calc(42px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  #jspsych-progressbar-container {
+    padding: 8px max(16px, env(safe-area-inset-right)) 9px max(16px, env(safe-area-inset-left));
+    top: calc(57px + env(safe-area-inset-top));
   }
 
   .trial-card {
-    padding: 30px 23px;
+    box-shadow: 6px 6px 0 rgba(16, 45, 63, 0.06);
+    padding: 25px 19px;
+  }
+
+  .trial-card h1,
+  .trial-card h2,
+  .survey-heading h2 {
+    font-size: clamp(2rem, 10vw, 2.75rem);
+    line-height: 1.08;
+    margin-bottom: 18px;
+  }
+
+  .trial-card > p:not(.trial-kicker):not(.fine-print):not(.reading-note),
+  .survey-heading > p:not(.trial-kicker) {
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+
+  .trial-kicker,
+  .survey-heading .trial-kicker {
+    margin-bottom: 16px;
+  }
+
+  .frame-card blockquote {
+    font-size: clamp(1.85rem, 9vw, 2.65rem);
+    line-height: 1.12;
+    margin: 14px 0 28px;
   }
 
   .consent-grid {
+    gap: 14px;
     grid-template-columns: 1fr;
+    margin: 22px 0;
+    padding: 18px 0;
   }
 
-  .jspsych-survey-likert-opts {
-    display: grid;
-    gap: 8px;
+  .survey-heading {
+    margin-bottom: 20px;
+  }
+
+  #jspsych-survey-likert-form .jspsych-survey-likert-statement {
+    font-size: 1.06rem;
+    margin-bottom: 10px;
+    padding-top: 24px;
+  }
+
+  #jspsych-survey-likert-form .jspsych-survey-likert-opts {
+    display: grid !important;
+    gap: 0;
     grid-template-columns: 1fr;
-    padding: 14px;
+    margin-bottom: 18px;
+    padding: 4px 10px !important;
     text-align: left;
-  }
-
-  .jspsych-survey-likert-opts li {
-    align-items: center;
-    display: grid;
-    gap: 10px;
-    grid-template-columns: 24px 1fr;
     width: 100% !important;
   }
 
-  .jspsych-survey-likert-opts li label {
-    align-items: center;
-    display: contents;
+  #jspsych-survey-likert-form .jspsych-survey-likert-opts::before {
+    display: none !important;
   }
 
-  .jspsych-survey-likert-opts input[type="radio"] {
-    margin: 0;
+  #jspsych-survey-likert-form .jspsych-survey-likert-opts li {
+    border-top: 1px solid rgba(205, 215, 213, 0.7);
+    display: block !important;
+    width: 100% !important;
+  }
+
+  #jspsych-survey-likert-form .jspsych-survey-likert-opts li:first-child {
+    border-top: 0;
+  }
+
+  #jspsych-survey-likert-form .jspsych-survey-likert-opt-label {
+    align-items: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: grid;
+    font-size: 0.88rem;
+    gap: 12px;
+    grid-template-columns: 24px 1fr;
+    line-height: 1.35;
+    min-height: 50px;
+    padding: 7px 4px;
+    text-align: left;
+  }
+
+  #jspsych-survey-likert-form .jspsych-survey-likert-opts input[type="radio"] {
+    height: 20px;
+    left: auto !important;
+    margin: 0 !important;
+    position: static !important;
+    width: 20px;
   }
 
   .jspsych-survey-multi-choice-question {
-    padding: 22px 18px;
+    margin-bottom: 16px;
+    padding: 20px 16px 10px;
+  }
+
+  .jspsych-survey-multi-choice-text {
+    font-size: 1.06rem;
+    margin-bottom: 10px;
+  }
+
+  .jspsych-survey-multi-choice-option {
+    border-top: 1px solid rgba(205, 215, 213, 0.7);
+    margin: 0;
+  }
+
+  .jspsych-survey-multi-choice-option label {
+    align-items: center;
+    display: flex;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    min-height: 50px;
+    padding: 8px 2px;
+    width: 100%;
+  }
+
+  .jspsych-survey-multi-choice-option input {
+    flex: 0 0 auto;
+    height: 20px;
+    margin-right: 12px;
+    width: 20px;
+  }
+
+  .jspsych-btn,
+  #jspsych-survey-likert-next,
+  #jspsych-survey-multi-choice-next {
+    margin: 0;
+    min-height: 56px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    width: 100%;
+  }
+
+  #jspsych-html-button-response-btngroup {
+    display: grid !important;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) !important;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  #jspsych-html-button-response-stimulus:has(.choice-card) + #jspsych-html-button-response-btngroup .jspsych-btn,
+  #jspsych-html-button-response-stimulus:has(.recall-card) + #jspsych-html-button-response-btngroup .jspsych-btn {
+    min-height: 58px;
+    padding: 15px 18px;
   }
 
   .completion-card,
   .debrief-card {
     padding: 34px 25px;
+  }
+
+  .completion-grid {
+    margin-bottom: calc(28px + env(safe-area-inset-bottom));
+    margin-top: 22px;
   }
 
   .download-actions {
@@ -838,6 +1042,23 @@ input:focus-visible {
 
   .download-actions button {
     width: 100%;
+  }
+
+  .centered-shell {
+    padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .primary-button:hover,
+  .jspsych-btn:hover {
+    box-shadow: none;
+    transform: none;
+  }
+
+  .primary-button:active,
+  .jspsych-btn:active {
+    opacity: 0.86;
   }
 }
 

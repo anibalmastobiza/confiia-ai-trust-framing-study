@@ -27,7 +27,7 @@ type CompletionData = {
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.1.0";
+const STUDY_VERSION = "1.2.0";
 const DATA_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
@@ -307,7 +307,6 @@ export default function Home() {
               required: true,
             },
           ],
-          scale_width: 760,
           button_label: "Continue",
           data: { phase: "trust_outcomes" },
           on_finish: (data: {
@@ -336,6 +335,7 @@ export default function Home() {
               <p>Choose the response that comes closest to your view.</p>
             </section>`,
           choices: relianceOptions.map((option) => option.label),
+          grid_columns: 1,
           data: { phase: "reliance_choice" },
           on_finish: (data: {
             response: number;
@@ -357,6 +357,7 @@ export default function Home() {
               <p>Please answer from memory.</p>
             </section>`,
           choices: recallOptions.map((option) => option.label),
+          grid_columns: 1,
           data: { phase: "frame_recall" },
           on_finish: (data: {
             response: number;

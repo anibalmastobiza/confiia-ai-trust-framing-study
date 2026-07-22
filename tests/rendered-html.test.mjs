@@ -33,6 +33,22 @@ test("keeps the one-sentence frames logically equivalent", async () => {
   );
 });
 
+test("keeps the study controls fluid and touch-friendly on mobile", async () => {
+  const [page, styles, html] = await Promise.all([
+    readFile(new URL("app/page.tsx", projectRoot), "utf8"),
+    readFile(new URL("app/globals.css", projectRoot), "utf8"),
+    readFile(new URL("index.html", projectRoot), "utf8"),
+  ]);
+
+  assert.doesNotMatch(page, /scale_width:\s*760/);
+  assert.equal(page.match(/grid_columns:\s*1/g)?.length, 2);
+  assert.match(styles, /min-height:\s*100dvh/);
+  assert.match(styles, /safe-area-inset-bottom/);
+  assert.match(styles, /grid-template-columns:\s*minmax\(0, 1fr\) !important/);
+  assert.match(styles, /width:\s*100% !important/);
+  assert.match(html, /viewport-fit=cover/);
+});
+
 test("includes Google Sheets persistence, GitHub Pages deployment, and a social card", async () => {
   const [collector, html, workflow, viteConfig] = await Promise.all([
     readFile(new URL("google-apps-script/Code.gs", projectRoot), "utf8"),
