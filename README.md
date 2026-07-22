@@ -43,6 +43,11 @@ The participant receives an anonymous code and can download the full local
 jsPsych session as CSV or JSON. The debrief explains the framing manipulation
 immediately after completion.
 
+Entries from the unified CONFIIA recruitment page retain an anonymous recruitment
+ID, source label, and assigned arm in both the summary row and local jsPsych data.
+This supports an allocation-to-completion audit without collecting names or email
+addresses.
+
 ## Development and publication
 
 ```bash

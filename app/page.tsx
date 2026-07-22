@@ -27,7 +27,7 @@ type CompletionData = {
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.2.0";
+const STUDY_VERSION = "1.2.1";
 const DATA_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
@@ -51,6 +51,19 @@ const AGREEMENT_SCALE = [
 function makeParticipantId() {
   const randomPart = crypto.randomUUID().replaceAll("-", "").slice(0, 8);
   return `CONFIIA-${randomPart.toUpperCase()}`;
+}
+
+function recruitmentMetadata() {
+  const params = new URLSearchParams(window.location.search);
+  const assignedStudy = params.get("assigned_study") ?? "";
+  return {
+    recruitment_id: (params.get("rid") ?? "").slice(0, 128),
+    recruitment_source: (params.get("source") ?? "").slice(0, 80),
+    assigned_study:
+      assignedStudy === "study01" || assignedStudy === "study02"
+        ? assignedStudy
+        : "",
+  };
 }
 
 function responseValue(
@@ -119,6 +132,7 @@ export default function Home() {
       const surveyMultiChoice = multiChoiceModule.default;
       const participantId = makeParticipantId();
       const submissionId = crypto.randomUUID();
+      const recruitment = recruitmentMetadata();
       const sessionStartedUtc = new Date().toISOString();
       const sessionStartedMs = Date.now();
 
@@ -179,6 +193,7 @@ export default function Home() {
             recall_rt_ms: recallTrial?.rt ?? "",
             background_rt_ms: backgroundTrial?.rt ?? "",
             total_elapsed_ms: Date.now() - sessionStartedMs,
+            ...recruitment,
           };
 
           void (async () => {
@@ -215,6 +230,7 @@ export default function Home() {
         jspsych_version: jsPsychVersion,
         frame_condition: condition,
         session_started_utc: sessionStartedUtc,
+        ...recruitment,
       });
 
       const relianceOptions = jsPsych.randomization.shuffle([

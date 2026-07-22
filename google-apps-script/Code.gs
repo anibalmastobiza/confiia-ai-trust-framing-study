@@ -31,6 +31,9 @@ const HEADERS = [
   "recall_rt_ms",
   "background_rt_ms",
   "total_elapsed_ms",
+  "recruitment_id",
+  "recruitment_source",
+  "assigned_study",
 ];
 
 function doGet() {
@@ -116,6 +119,16 @@ function getResponseSheet_() {
       .setBackground("#15302b")
       .setFontColor("#ffffff");
     sheet.autoResizeColumns(1, HEADERS.length);
+  } else if (sheet.getLastColumn() < HEADERS.length) {
+    const firstNewColumn = sheet.getLastColumn() + 1;
+    const missingHeaders = HEADERS.slice(firstNewColumn - 1);
+    sheet
+      .getRange(1, firstNewColumn, 1, missingHeaders.length)
+      .setValues([missingHeaders])
+      .setFontWeight("bold")
+      .setBackground("#15302b")
+      .setFontColor("#ffffff");
+    sheet.autoResizeColumns(firstNewColumn, missingHeaders.length);
   }
 
   return sheet;
