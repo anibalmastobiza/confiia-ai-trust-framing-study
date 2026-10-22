@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readRecruitmentMetadata } from "./recruitment";
+import { getProlificCompletion } from "./prolific";
 
 type StudyStage = "landing" | "running" | "saving" | "complete" | "error";
 type FrameCondition = "gain" | "loss";
@@ -25,10 +26,11 @@ type CompletionData = {
   csv: string;
   json: string;
   submissionStatus: SubmissionStatus;
+  prolificCompletion: ReturnType<typeof getProlificCompletion>;
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.2.2";
+const STUDY_VERSION = "1.2.3";
 const DATA_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
@@ -121,6 +123,7 @@ export default function Home() {
       const participantId = makeParticipantId();
       const submissionId = crypto.randomUUID();
       const recruitment = readRecruitmentMetadata(window.location.search);
+      const prolificCompletion = getProlificCompletion(recruitment);
       const sessionStartedUtc = new Date().toISOString();
       const sessionStartedMs = Date.now();
 
@@ -198,6 +201,7 @@ export default function Home() {
               csv: data.csv(),
               json: data.json(),
               submissionStatus,
+              prolificCompletion,
             });
             setStage("complete");
           })();
@@ -508,11 +512,13 @@ export default function Home() {
             </div>
             {completion.submissionStatus === "failed" ? (
               <p className="submission-warning" role="alert">
-                Your response could not be stored online. Please download a
-                local copy below if you would like to keep it.
+                We could not confirm that your response was sent. Please
+                download a local copy below.
               </p>
             ) : (
-              <p className="submission-success">Response submitted successfully.</p>
+              <p className="submission-success">
+                Your response was sent. You can keep a local copy below.
+              </p>
             )}
             <div className="download-actions">
               <button
@@ -556,6 +562,25 @@ export default function Home() {
               Learn about CONFIIA <span aria-hidden="true">↗</span>
             </a>
           </aside>
+          {completion.prolificCompletion && (
+            <div className="completion-card prolific-completion">
+              <p className="eyebrow">Prolific completion</p>
+              <p>
+                Return to Prolific to record your participation. If needed,
+                you can enter the completion code below manually.
+              </p>
+              <div className="participant-code">
+                <span>Prolific completion code</span>
+                <strong>{completion.prolificCompletion.code}</strong>
+              </div>
+              <a
+                className="primary-button prolific-return"
+                href={completion.prolificCompletion.url}
+              >
+                Return to Prolific
+              </a>
+            </div>
+          )}
         </section>
       </main>
     );

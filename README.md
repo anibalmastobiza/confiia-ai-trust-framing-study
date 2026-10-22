@@ -79,10 +79,20 @@ column order are preserved; an unexpected header order stops writes instead
 of misaligning responses. Publish a new version of the existing web-app
 deployment so its endpoint remains unchanged.
 
-This change only configures identifiers. Configure the completion URL generated
-by the separate Prolific announcement before launch, then verify that a test
-session's three IDs reach Google Sheets and match the local exports. The
-displayed CONFIIA participant code is not a Prolific completion code. The current
+The completion configuration in `app/prolific.ts` is linked to Prolific study
+`6ad9d45f58c16fdff07d80eb`, with completion code `C16ZE7NM` and return URL
+`https://app.prolific.com/submissions/complete?cc=C16ZE7NM`. After the debrief,
+participants whose captured entry parameters include a participant ID and this
+exact study ID see a return button and the code for manual entry. There is no
+automatic redirect. The return remains available if the response submission
+attempt fails, alongside the warning and local downloads. The CONFIIA session
+code is displayed separately and is not a Prolific completion code.
+
+If the Prolific announcement is duplicated or replaced, update both constants
+in `app/prolific.ts` with the new study ID and completion code, test the entry
+and completion flow, and redeploy GitHub Pages before recruiting. Verify that
+a test session's three IDs reach Google Sheets and match the local exports.
+The current
 `no-cors` submission transport does not expose the collector's response body;
 its successful resolution alone does not verify that a row was saved.
 

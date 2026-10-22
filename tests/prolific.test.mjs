@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import * as jsxRuntime from "react/jsx-runtime";
+import { renderToStaticMarkup } from "react-dom/server";
 
 const projectRoot = new URL("../", import.meta.url);
 const recruitmentSource = await readFile(new URL("app/recruitment.ts", projectRoot), "utf8");
@@ -12,8 +14,18 @@ const recruitmentJs = ts.transpileModule(recruitmentSource, {
 const { readRecruitmentMetadata } = await import(
   `data:text/javascript;base64,${Buffer.from(recruitmentJs).toString("base64")}`
 );
+const prolificSource = await readFile(new URL("app/prolific.ts", projectRoot), "utf8");
+const prolificJs = ts.transpileModule(prolificSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { getProlificCompletion } = await import(
+  `data:text/javascript;base64,${Buffer.from(prolificJs).toString("base64")}`
+);
 const collectorSource = await readFile(new URL("google-apps-script/Code.gs", projectRoot), "utf8");
 const studyId = "confiia_ai_trust_one_sentence_frame";
+const prolificStudyId = "6ad9d45f58c16fdff07d80eb";
+const prolificCompletionCode = "C16ZE7NM";
+const prolificCompletionUrl = "https://app.prolific.com/submissions/complete?cc=C16ZE7NM";
 
 test("direct and router entries preserve old metadata with empty Prolific identifiers", () => {
   assert.deepEqual(readRecruitmentMetadata(""), {
@@ -47,13 +59,14 @@ test("metadata is bounded and accepts only the supported router assignments", ()
   assert.equal(readRecruitmentMetadata("?assigned_study=study02").assigned_study, "study02");
 });
 
-test("the study uses one captured snapshot for the collector and jsPsych exports", async () => {
+for (const shouldFail of [false, true]) {
+test(`the study preserves its captured snapshot and completion when submission ${shouldFail ? "fails" : "succeeds"}`, async () => {
   const pageSource = await readFile(new URL("app/page.tsx", projectRoot), "utf8");
   const compiled = ts.transpileModule(pageSource, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const initialSearch = "?PROLIFIC_PID=person-001&STUDY_ID=prolific-study&SESSION_ID=session-1&rid=route-1&source=custom&assigned_study=study01";
-  const fakeWindow = { location: { search: initialSearch } };
+  const initialSearch = `?PROLIFIC_PID=person-001&STUDY_ID=${prolificStudyId}&SESSION_ID=session-1&rid=route-1&source=custom&assigned_study=study01`;
+  const fakeWindow = { location: { search: initialSearch }, setTimeout: (callback) => callback() };
   let startStudy;
   let finishStudy;
   let trialProperties;
@@ -62,6 +75,7 @@ test("the study uses one captured snapshot for the collector and jsPsych exports
   let completion;
   let refCount = 0;
   let uuidCount = 0;
+  let fetchCalls = 0;
   const states = [];
   const fakeData = {
     values: () => [],
@@ -83,16 +97,21 @@ test("the study uses one captured snapshot for the collector and jsPsych exports
     },
     "react/jsx-runtime": { jsx: () => null, jsxs: () => null },
     "./recruitment": { readRecruitmentMetadata },
+    "./prolific": { getProlificCompletion },
     jspsych: { initJsPsych: (options) => { finishStudy = options.on_finish; return jsPsych; } },
     "@jspsych/plugin-html-button-response": { default: "button" },
     "@jspsych/plugin-survey-likert": { default: "likert" },
     "@jspsych/plugin-survey-multi-choice": { default: "choice" },
   };
   const context = vm.createContext({
-    exports: {}, window: fakeWindow, console,
+    exports: {}, window: fakeWindow, console: { error: () => {} },
     crypto: { randomUUID: () => `0000000${++uuidCount}-0000-0000-0000-000000000000` },
     require: (name) => { assert.ok(Object.hasOwn(modules, name), `Unexpected module ${name}`); return modules[name]; },
-    fetch: async (_url, options) => { payload = JSON.parse(options.body); },
+    fetch: async (_url, options) => {
+      fetchCalls++;
+      payload = JSON.parse(options.body);
+      if (shouldFail) throw new Error("Simulated network failure");
+    },
   });
   vm.runInContext(compiled, context);
   context.exports.default();
@@ -111,10 +130,86 @@ test("the study uses one captured snapshot for the collector and jsPsych exports
   assert.equal(trialProperties.study_id, studyId);
   assert.match(payload.participant_id, /^CONFIIA-/);
   assert.notEqual(payload.participant_id, payload.prolific_pid);
-  assert.equal(payload.study_version, "1.2.2");
+  assert.equal(payload.study_version, "1.2.3");
   assert.equal(completion.csv, fakeData.csv());
   assert.equal(completion.json, fakeData.json());
+  assert.equal(completion.prolificCompletion.code, prolificCompletionCode);
+  assert.equal(completion.prolificCompletion.url, prolificCompletionUrl);
+  assert.equal(completion.submissionStatus, shouldFail ? "failed" : "sent");
+  assert.equal(fetchCalls, shouldFail ? 2 : 1);
   assert.deepEqual(states, ["saving", "complete"]);
+});
+}
+
+test("Prolific completion requires a participant ID and the exact configured study ID", () => {
+  assert.deepEqual(getProlificCompletion({ prolific_pid: "person", prolific_study_id: prolificStudyId }), {
+    code: prolificCompletionCode, url: prolificCompletionUrl,
+  });
+  for (const metadata of [
+    { prolific_pid: "", prolific_study_id: prolificStudyId },
+    { prolific_pid: "person", prolific_study_id: "" },
+    { prolific_pid: "person", prolific_study_id: "other-study" },
+    { prolific_pid: "person", prolific_study_id: prolificStudyId.toUpperCase() },
+    { prolific_pid: "person", prolific_study_id: `${prolificStudyId}extra` },
+  ]) {
+    assert.equal(getProlificCompletion(metadata), null);
+  }
+});
+
+async function renderCompletion(search, submissionStatus) {
+  const pageSource = await readFile(new URL("app/page.tsx", projectRoot), "utf8");
+  const compiled = ts.transpileModule(pageSource, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const completion = {
+    participantId: "CONFIIA-LOCAL", csv: "local csv", json: "local json", submissionStatus,
+    prolificCompletion: getProlificCompletion(readRecruitmentMetadata(search)),
+  };
+  const modules = {
+    react: {
+      useState: (initial) => [initial === "landing" ? "complete" : completion, () => {}],
+      useRef: (initial) => ({ current: initial }),
+      useCallback: (callback) => callback,
+      useEffect: () => {},
+    },
+    "react/jsx-runtime": jsxRuntime,
+    "./recruitment": { readRecruitmentMetadata },
+    "./prolific": { getProlificCompletion },
+  };
+  const context = vm.createContext({
+    exports: {},
+    require: (name) => { assert.ok(Object.hasOwn(modules, name), `Unexpected module ${name}`); return modules[name]; },
+  });
+  vm.runInContext(compiled, context);
+  return renderToStaticMarkup(context.exports.default());
+}
+
+test("completion renders the correct return link and separate code after the debrief, including failed submissions", async () => {
+  for (const status of ["sent", "failed"]) {
+    const html = await renderCompletion(`?PROLIFIC_PID=person&STUDY_ID=${prolificStudyId}`, status);
+    assert.ok(html.includes(`href="${prolificCompletionUrl}"`));
+    assert.match(html, /Return to Prolific/);
+    assert.match(html, /Prolific completion code<\/span><strong>C16ZE7NM/);
+    assert.match(html, /Your session code<\/span><strong>CONFIIA-LOCAL/);
+    assert.ok(html.indexOf("Why this matters") < html.indexOf("Prolific completion code"));
+    assert.match(html, /Download CSV/);
+    assert.match(html, /Download JSON/);
+    assert.doesNotMatch(html, /Response submitted successfully|stored successfully|http-equiv="refresh"/);
+    if (status === "failed") {
+      assert.match(html, /could not confirm that your response was sent/);
+      assert.doesNotMatch(html, /Your response was sent\./);
+    } else {
+      assert.match(html, /Your response was sent\./);
+    }
+  }
+});
+
+test("direct visits, missing participant IDs and other studies do not render a Prolific completion", async () => {
+  for (const search of ["", `?STUDY_ID=${prolificStudyId}`, "?PROLIFIC_PID=person&STUDY_ID=other-study"]) {
+    const html = await renderCompletion(search, "sent");
+    assert.doesNotMatch(html, /Return to Prolific|C16ZE7NM|submissions\/complete/);
+    assert.match(html, /CONFIIA-LOCAL/);
+  }
 });
 
 function collectorHarness(initialRows = [], initialCapacity = 26) {
