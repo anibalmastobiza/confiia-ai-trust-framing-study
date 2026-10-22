@@ -681,6 +681,20 @@ input:focus-visible {
   max-width: 720px;
 }
 
+.prolific-completion {
+  grid-column: 1 / -1;
+}
+
+.prolific-completion > p:not(.eyebrow) {
+  line-height: 1.65;
+  margin: 20px 0;
+}
+
+.prolific-return {
+  margin-top: 24px;
+  text-decoration: none;
+}
+
 .participant-code {
   border-bottom: 1px solid var(--line);
   border-top: 1px solid var(--line);
