@@ -130,7 +130,7 @@ test(`the study preserves its captured snapshot and completion when submission $
   assert.equal(trialProperties.study_id, studyId);
   assert.match(payload.participant_id, /^CONFIIA-/);
   assert.notEqual(payload.participant_id, payload.prolific_pid);
-  assert.equal(payload.study_version, "1.2.3");
+  assert.equal(payload.study_version, "1.2.4");
   assert.equal(completion.csv, fakeData.csv());
   assert.equal(completion.json, fakeData.json());
   assert.equal(completion.prolificCompletion.code, prolificCompletionCode);

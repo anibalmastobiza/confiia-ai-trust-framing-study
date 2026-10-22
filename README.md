@@ -116,3 +116,12 @@ with the institution-approved protocol and confirm the retention, withdrawal,
 and data-protection procedures.
 
 The implementation follows the official [jsPsych 8 documentation](https://www.jspsych.org/latest/).
+
+## Participant information update, 22 October 2026
+
+Version 1.2.4 identifies the diagnostic system and its performance figures as
+fictional research examples in the consent and debrief; the landing page describes
+a hypothetical system. The two framing sentences, randomization, questions,
+collection schema and Prolific completion configuration are unchanged. Historical
+responses are preserved and remain available for the combined analysis requested
+by the researcher.
