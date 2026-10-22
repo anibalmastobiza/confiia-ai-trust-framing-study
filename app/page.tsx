@@ -30,7 +30,7 @@ type CompletionData = {
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.2.3";
+const STUDY_VERSION = "1.2.4";
 const DATA_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
@@ -259,7 +259,7 @@ export default function Home() {
             <section class="trial-card consent-card">
               <p class="trial-kicker">Before you begin</p>
               <h1>A brief study of AI in clinical decisions</h1>
-              <p>You are invited to take part in a minimal-risk research pilot about impressions of an AI-assisted diagnostic system.</p>
+              <p>You are invited to take part in a minimal-risk research pilot about impressions of a hypothetical AI-assisted diagnostic system. The system and its performance figures are fictional research examples.</p>
               <div class="consent-grid">
                 <div><span>Time</span><strong>About 2 minutes</strong></div>
                 <div><span>Task</span><strong>Read one sentence and respond</strong></div>
@@ -501,7 +501,8 @@ export default function Home() {
             <p className="eyebrow">Thank you</p>
             <h1>Your response is complete.</h1>
             <p className="completion-lead">
-              The two descriptions were mathematically equivalent: identifying
+              The diagnostic system and performance figures were fictional research
+              examples. The two descriptions were mathematically equivalent: identifying
               90 of 100 cases correctly means failing to identify 10 of 100.
               The study tests whether that one-sentence frame changes trust in
               AI-assisted clinical decisions.
@@ -623,8 +624,8 @@ export default function Home() {
             Would you <em>trust</em> this system?
           </h1>
           <p className="hero-summary">
-            Read one sentence about an AI-assisted diagnostic system, then
-            share your first considered impression.
+            Read one sentence about a hypothetical AI-assisted diagnostic system,
+            then share your first considered impression.
           </p>
           <button
             className="primary-button begin-button"
