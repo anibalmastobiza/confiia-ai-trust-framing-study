@@ -34,6 +34,9 @@ const HEADERS = [
   "recruitment_id",
   "recruitment_source",
   "assigned_study",
+  "prolific_pid",
+  "prolific_study_id",
+  "prolific_session_id",
 ];
 
 function doGet() {
@@ -111,6 +114,7 @@ function getResponseSheet_() {
   }
 
   if (sheet.getLastRow() === 0) {
+    ensureColumnCapacity_(sheet);
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
     sheet
@@ -119,19 +123,39 @@ function getResponseSheet_() {
       .setBackground("#15302b")
       .setFontColor("#ffffff");
     sheet.autoResizeColumns(1, HEADERS.length);
-  } else if (sheet.getLastColumn() < HEADERS.length) {
-    const firstNewColumn = sheet.getLastColumn() + 1;
-    const missingHeaders = HEADERS.slice(firstNewColumn - 1);
-    sheet
-      .getRange(1, firstNewColumn, 1, missingHeaders.length)
-      .setValues([missingHeaders])
-      .setFontWeight("bold")
-      .setBackground("#15302b")
-      .setFontColor("#ffffff");
-    sheet.autoResizeColumns(firstNewColumn, missingHeaders.length);
+  } else {
+    const existingColumnCount = Math.min(sheet.getLastColumn(), HEADERS.length);
+    const existingHeaders = sheet
+      .getRange(1, 1, 1, existingColumnCount)
+      .getValues()[0];
+    if (existingHeaders.some(function (header, index) {
+      return header !== HEADERS[index];
+    })) {
+      throw new Error("Response sheet headers do not match the expected order. No data was written.");
+    }
+
+    if (sheet.getLastColumn() < HEADERS.length) {
+      const firstNewColumn = sheet.getLastColumn() + 1;
+      const missingHeaders = HEADERS.slice(firstNewColumn - 1);
+      ensureColumnCapacity_(sheet);
+      sheet
+        .getRange(1, firstNewColumn, 1, missingHeaders.length)
+        .setValues([missingHeaders])
+        .setFontWeight("bold")
+        .setBackground("#15302b")
+        .setFontColor("#ffffff");
+      sheet.autoResizeColumns(firstNewColumn, missingHeaders.length);
+    }
   }
 
   return sheet;
+}
+
+function ensureColumnCapacity_(sheet) {
+  const currentColumns = sheet.getMaxColumns();
+  if (currentColumns < HEADERS.length) {
+    sheet.insertColumnsAfter(currentColumns, HEADERS.length - currentColumns);
+  }
 }
 
 function safeCell_(value) {
