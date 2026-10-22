@@ -39,7 +39,7 @@ The collector validates the study identifier, prevents duplicate submissions,
 serializes concurrent writes, and neutralizes spreadsheet formulas. Its source
 is versioned in [`google-apps-script/Code.gs`](google-apps-script/Code.gs).
 
-The participant receives an anonymous code and can download the full local
+The participant receives a session code and can download the full local
 jsPsych session as CSV or JSON. The debrief explains the framing manipulation
 immediately after completion.
 
@@ -47,6 +47,44 @@ Entries from the unified CONFIIA recruitment page retain an anonymous recruitmen
 ID, source label, and assigned arm in both the summary row and local jsPsych data.
 This supports an allocation-to-completion audit without collecting names or email
 addresses.
+
+## Independent Prolific recruitment
+
+In Prolific, select participant identification through URL parameters and use
+the direct Study 01 URL:
+
+```text
+https://anibalmastobiza.github.io/confiia-ai-trust-framing-study/?PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
+```
+
+Prolific replaces the placeholders for each participant. Do not replace them
+with the workspace ID or share a participant's populated URL. The app captures
+the parameters once when the session starts and stores them as `prolific_pid`,
+`prolific_study_id`, and `prolific_session_id` in the summary row and each local
+jsPsych record exported to CSV or JSON. These fields are separate from CONFIIA's
+internal `participant_id`, `study_id`, and `submission_id`. Values are limited
+to 128 characters. This records the supplied identifiers; it does not authenticate
+them against the Prolific API.
+
+If a Prolific participant ID is present and no source label was supplied,
+`recruitment_source` is set to `prolific`. Existing `rid`, `source`, and
+`assigned_study` parameters remain supported. Direct visits without Prolific
+parameters continue to work and leave the three Prolific fields empty.
+
+Deploy the updated `google-apps-script/Code.gs` to the existing Apps Script web
+app before collecting Prolific responses. Updating GitHub Pages alone does not
+update that collector. Run `setupResponses()` to append the three new headers,
+or let the first submission perform the same migration. Existing rows and
+column order are preserved; an unexpected header order stops writes instead
+of misaligning responses. Publish a new version of the existing web-app
+deployment so its endpoint remains unchanged.
+
+This change only configures identifiers. Configure the completion URL generated
+by the separate Prolific announcement before launch, then verify that a test
+session's three IDs reach Google Sheets and match the local exports. The
+displayed CONFIIA participant code is not a Prolific completion code. The current
+`no-cors` submission transport does not expose the collector's response body;
+its successful resolution alone does not verify that a row was saved.
 
 ## Development and publication
 

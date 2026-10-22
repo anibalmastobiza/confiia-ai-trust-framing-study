@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { readRecruitmentMetadata } from "./recruitment";
 
 type StudyStage = "landing" | "running" | "saving" | "complete" | "error";
 type FrameCondition = "gain" | "loss";
@@ -27,7 +28,7 @@ type CompletionData = {
 };
 
 const STUDY_ID = "confiia_ai_trust_one_sentence_frame";
-const STUDY_VERSION = "1.2.1";
+const STUDY_VERSION = "1.2.2";
 const DATA_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxv_noKnwGC4LCkoex3yYkSDfa3fCk7ZTUjwpcs1ukTCGfOaMCRpJHgxxv-y70hdg2_/exec";
 
@@ -51,19 +52,6 @@ const AGREEMENT_SCALE = [
 function makeParticipantId() {
   const randomPart = crypto.randomUUID().replaceAll("-", "").slice(0, 8);
   return `CONFIIA-${randomPart.toUpperCase()}`;
-}
-
-function recruitmentMetadata() {
-  const params = new URLSearchParams(window.location.search);
-  const assignedStudy = params.get("assigned_study") ?? "";
-  return {
-    recruitment_id: (params.get("rid") ?? "").slice(0, 128),
-    recruitment_source: (params.get("source") ?? "").slice(0, 80),
-    assigned_study:
-      assignedStudy === "study01" || assignedStudy === "study02"
-        ? assignedStudy
-        : "",
-  };
 }
 
 function responseValue(
@@ -132,7 +120,7 @@ export default function Home() {
       const surveyMultiChoice = multiChoiceModule.default;
       const participantId = makeParticipantId();
       const submissionId = crypto.randomUUID();
-      const recruitment = recruitmentMetadata();
+      const recruitment = readRecruitmentMetadata(window.location.search);
       const sessionStartedUtc = new Date().toISOString();
       const sessionStartedMs = Date.now();
 
@@ -273,7 +261,7 @@ export default function Home() {
                 <div><span>Task</span><strong>Read one sentence and respond</strong></div>
                 <div><span>Privacy</span><strong>No names or contact details</strong></div>
               </div>
-              <p class="fine-print">Participation is voluntary. You may stop at any time by closing this page. Your anonymous responses and response times will be stored for research. This prototype is not a clinical tool. Questions may be directed to <a href="mailto:amastobiza@ugr.es">amastobiza@ugr.es</a>.</p>
+              <p class="fine-print">Participation is voluntary. You may stop at any time by closing this page. Your responses and response times will be stored for research.${recruitment.prolific_pid || recruitment.prolific_study_id || recruitment.prolific_session_id ? " If you enter through Prolific, the participant, study and session identifiers supplied by Prolific are stored with your responses to link your participation." : ""} This prototype is not a clinical tool. Questions may be directed to <a href="mailto:amastobiza@ugr.es">amastobiza@ugr.es</a>.</p>
             </section>`,
           choices: ["I am 18 or older and I agree"],
           data: { phase: "consent" },
@@ -469,7 +457,7 @@ export default function Home() {
             <span className="mark" aria-hidden="true">C</span>
             CONFIIA / Study 01
           </a>
-          <span className="session-label">Anonymous session</span>
+          <span className="session-label">Research session</span>
         </header>
         <div ref={experimentElement} className="experiment-mount" />
       </main>
@@ -482,7 +470,7 @@ export default function Home() {
         <section className="saving-card">
           <div className="pulse-mark" aria-hidden="true" />
           <p className="trial-kicker">One moment</p>
-          <h1>Saving your anonymous response…</h1>
+          <h1>Saving your response…</h1>
           <p>Please keep this page open. This can take up to 15 seconds.</p>
         </section>
       </main>
@@ -515,7 +503,7 @@ export default function Home() {
               AI-assisted clinical decisions.
             </p>
             <div className="participant-code">
-              <span>Your anonymous code</span>
+              <span>Your session code</span>
               <strong>{completion.participantId}</strong>
             </div>
             {completion.submissionStatus === "failed" ? (
@@ -620,7 +608,7 @@ export default function Home() {
             Begin study <span aria-hidden="true">→</span>
           </button>
           <p className="eligibility-note">
-            For adults aged 18+ · Anonymous · About 2 minutes
+            For adults aged 18+ · No names requested · About 2 minutes
           </p>
         </div>
 
